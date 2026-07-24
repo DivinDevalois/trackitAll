@@ -18,6 +18,7 @@ class TaskRepository:
         status: TaskStatus = TaskStatus.TODO,
         priority: TaskPriority = TaskPriority.MEDIUM,
         due_date: date | None = None,
+        project_id: int | None = None,
     ) -> Task:
         task = Task(
             title=title,
@@ -25,6 +26,7 @@ class TaskRepository:
             status=status,
             priority=priority,
             due_date=due_date,
+            project_id=project_id,
         )
         self.session.add(task)
         self.session.commit()
@@ -34,8 +36,11 @@ class TaskRepository:
     def get(self, task_id: int) -> Task | None:
         return self.session.get(Task, task_id)
 
-    def list(self) -> list[Task]:
-        return list(self.session.scalars(select(Task).order_by(Task.id)))
+    def list(self, *, project_id: int | None = None) -> list[Task]:
+        stmt = select(Task).order_by(Task.id)
+        if project_id is not None:
+            stmt = stmt.where(Task.project_id == project_id)
+        return list(self.session.scalars(stmt))
 
     def update_status(self, task_id: int, status: TaskStatus) -> Task | None:
         task = self.session.get(Task, task_id)

@@ -79,3 +79,32 @@ def test_update_task_status_invalid_status_returns_422(client):
     response = client.patch(f"/tasks/{created['id']}/status", json={"status": "not_a_status"})
 
     assert response.status_code == 422
+
+
+def test_create_task_with_project_id_returns_201(client):
+    project = client.post("/projects", json={"name": "TrackItAll"}).json()
+
+    response = client.post(
+        "/tasks", json={"title": "Ship TIA-21", "project_id": project["id"]}
+    )
+
+    assert response.status_code == 201
+    assert response.json()["project_id"] == project["id"]
+
+
+def test_create_task_with_unknown_project_id_returns_400(client):
+    response = client.post("/tasks", json={"title": "Orphan", "project_id": 999})
+
+    assert response.status_code == 400
+
+
+def test_list_tasks_can_be_filtered_by_project_id(client):
+    project = client.post("/projects", json={"name": "TrackItAll"}).json()
+    client.post("/tasks", json={"title": "In project", "project_id": project["id"]})
+    client.post("/tasks", json={"title": "Not in project"})
+
+    response = client.get(f"/tasks?project_id={project['id']}")
+
+    assert response.status_code == 200
+    titles = [task["title"] for task in response.json()]
+    assert titles == ["In project"]

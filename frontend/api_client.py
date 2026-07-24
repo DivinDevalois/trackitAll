@@ -17,12 +17,15 @@ def create_task(
     description: str | None,
     priority: str,
     due_date: str | None,
+    project_id: int | None = None,
 ) -> dict:
     payload: dict = {"title": title, "priority": priority}
     if description:
         payload["description"] = description
     if due_date:
         payload["due_date"] = due_date
+    if project_id is not None:
+        payload["project_id"] = project_id
     response = requests.post(f"{API_BASE_URL}/tasks", json=payload)
     response.raise_for_status()
     return response.json()
@@ -58,6 +61,18 @@ def check_in_habit(habit_id: int, check_in_date: str, *, completed: bool = True)
     return response.json()
 
 
+def list_projects() -> list[dict]:
+    response = requests.get(f"{API_BASE_URL}/projects")
+    response.raise_for_status()
+    return response.json()
+
+
+def create_project(*, name: str) -> dict:
+    response = requests.post(f"{API_BASE_URL}/projects", json={"name": name})
+    response.raise_for_status()
+    return response.json()
+
+
 def get_task_metrics() -> list[dict]:
     response = requests.get(f"{API_BASE_URL}/analytics/tasks")
     response.raise_for_status()
@@ -67,5 +82,13 @@ def get_task_metrics() -> list[dict]:
 def get_habit_metrics(habit_id: int | None = None) -> list[dict]:
     params = {"habit_id": habit_id} if habit_id is not None else {}
     response = requests.get(f"{API_BASE_URL}/analytics/habits", params=params)
+    response.raise_for_status()
+    return response.json()
+
+
+def get_habit_task_correlation(window_days: int = 30) -> dict:
+    response = requests.get(
+        f"{API_BASE_URL}/analytics/correlation", params={"window_days": window_days}
+    )
     response.raise_for_status()
     return response.json()
