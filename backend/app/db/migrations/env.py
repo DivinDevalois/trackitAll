@@ -1,26 +1,20 @@
-import os
 from logging.config import fileConfig
-from pathlib import Path
 
-from dotenv import load_dotenv
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 
 from alembic import context
-
-# Load the repo-root .env (shared with docker-compose.yml) so the same
-# POSTGRES_* variables configure both the container and this connection.
-load_dotenv(Path(__file__).resolve().parents[4] / ".env")
+from app.db.config import POSTGRES_DB, database_url
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
 
-database_url = (
-    f"postgresql+psycopg://{os.environ['POSTGRES_USER']}:{os.environ['POSTGRES_PASSWORD']}"
-    f"@localhost:{os.environ.get('POSTGRES_PORT', '5432')}/{os.environ['POSTGRES_DB']}"
-)
-config.set_main_option("sqlalchemy.url", database_url)
+# Callers (e.g. tests) may already have set sqlalchemy.url to point at a
+# different database (the test DB) before invoking migrations; only default
+# to the dev database if nothing else configured it.
+if not config.get_main_option("sqlalchemy.url"):
+    config.set_main_option("sqlalchemy.url", database_url(POSTGRES_DB))
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.

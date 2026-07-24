@@ -1,6 +1,6 @@
 from sqlalchemy import text
 
-from tests.conftest import POSTGRES_DB, POSTGRES_TEST_DB
+from app.db.config import POSTGRES_DB, POSTGRES_TEST_DB
 
 
 def test_connects_to_an_isolated_test_database(db_engine):
