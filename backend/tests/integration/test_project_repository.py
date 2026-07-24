@@ -1,11 +1,17 @@
 import pytest
 
 from app.repositories.project_repository import ProjectRepository
+from app.repositories.task_repository import TaskRepository
 
 
 @pytest.fixture()
 def repo(db_session):
     return ProjectRepository(db_session)
+
+
+@pytest.fixture()
+def task_repo(db_session):
+    return TaskRepository(db_session)
 
 
 def test_create_persists_project(repo):
@@ -63,3 +69,15 @@ def test_delete_removes_project(repo):
 
 def test_delete_returns_false_for_unknown_id(repo):
     assert repo.delete(999) is False
+
+
+def test_delete_orphans_its_tasks_instead_of_failing(repo, task_repo, db_session):
+    project = repo.create(name="To delete")
+    task = task_repo.create(title="Linked task", project_id=project.id)
+
+    assert repo.delete(project.id) is True
+    # ON DELETE SET NULL happens in Postgres, outside the ORM's tracking —
+    # the identity map still holds the pre-delete in-memory value unless
+    # we force a reload from the database.
+    db_session.expire(task)
+    assert task_repo.get(task.id).project_id is None

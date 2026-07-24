@@ -1,20 +1,9 @@
 import streamlit as st
 
-from api_client import create_project, create_task, list_projects, list_tasks, update_task_status
+from api_client import create_task, list_projects, list_tasks, update_task_status
 
 st.set_page_config(page_title="Tâches — TrackItAll", layout="wide")
 st.title("Tâches")
-
-with st.expander("+ Nouveau projet"):
-    with st.form("create_project_form", clear_on_submit=True):
-        project_name = st.text_input("Nom du projet")
-        if st.form_submit_button("Créer le projet"):
-            if not project_name.strip():
-                st.error("Le nom est obligatoire.")
-            else:
-                create_project(name=project_name)
-                st.success("Projet créé.")
-                st.rerun()
 
 projects = list_projects()
 project_options = [None] + [p["id"] for p in projects]
