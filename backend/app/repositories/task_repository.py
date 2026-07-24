@@ -1,6 +1,6 @@
 from datetime import date
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.models.task import Task, TaskPriority, TaskStatus
@@ -42,6 +42,7 @@ class TaskRepository:
         if task is None:
             return None
         task.status = status
+        task.completed_at = func.now() if status == TaskStatus.DONE else None
         self.session.commit()
         self.session.refresh(task)
         return task
