@@ -11,6 +11,7 @@ class TaskCreate(BaseModel):
     status: TaskStatus = TaskStatus.TODO
     priority: TaskPriority = TaskPriority.MEDIUM
     due_date: date | None = None
+    project_id: int | None = None
 
 
 class TaskStatusUpdate(BaseModel):
@@ -26,5 +27,6 @@ class TaskRead(BaseModel):
     status: TaskStatus
     priority: TaskPriority
     due_date: date | None
+    project_id: int | None
     created_at: datetime
     updated_at: datetime

@@ -1,12 +1,18 @@
 import pytest
 
 from app.models.task import TaskPriority, TaskStatus
+from app.repositories.project_repository import ProjectRepository
 from app.repositories.task_repository import TaskRepository
 
 
 @pytest.fixture()
 def repo(db_session):
     return TaskRepository(db_session)
+
+
+@pytest.fixture()
+def project_repo(db_session):
+    return ProjectRepository(db_session)
 
 
 def test_create_sets_defaults_and_persists(repo):
@@ -66,3 +72,21 @@ def test_update_status_changes_and_persists(repo):
 
 def test_update_status_returns_none_for_unknown_id(repo):
     assert repo.update_status(999, TaskStatus.DONE) is None
+
+
+def test_create_accepts_project_id(repo, project_repo):
+    project = project_repo.create(name="TrackItAll")
+
+    task = repo.create(title="Ship TIA-21", project_id=project.id)
+
+    assert task.project_id == project.id
+
+
+def test_list_can_be_filtered_by_project_id(repo, project_repo):
+    project = project_repo.create(name="TrackItAll")
+    in_project = repo.create(title="In project", project_id=project.id)
+    repo.create(title="Not in project")
+
+    tasks = repo.list(project_id=project.id)
+
+    assert [t.id for t in tasks] == [in_project.id]

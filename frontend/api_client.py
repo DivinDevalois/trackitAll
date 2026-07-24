@@ -17,12 +17,15 @@ def create_task(
     description: str | None,
     priority: str,
     due_date: str | None,
+    project_id: int | None = None,
 ) -> dict:
     payload: dict = {"title": title, "priority": priority}
     if description:
         payload["description"] = description
     if due_date:
         payload["due_date"] = due_date
+    if project_id is not None:
+        payload["project_id"] = project_id
     response = requests.post(f"{API_BASE_URL}/tasks", json=payload)
     response.raise_for_status()
     return response.json()
@@ -54,6 +57,18 @@ def check_in_habit(habit_id: int, check_in_date: str, *, completed: bool = True)
         f"{API_BASE_URL}/habits/{habit_id}/check-in",
         json={"date": check_in_date, "completed": completed},
     )
+    response.raise_for_status()
+    return response.json()
+
+
+def list_projects() -> list[dict]:
+    response = requests.get(f"{API_BASE_URL}/projects")
+    response.raise_for_status()
+    return response.json()
+
+
+def create_project(*, name: str) -> dict:
+    response = requests.post(f"{API_BASE_URL}/projects", json={"name": name})
     response.raise_for_status()
     return response.json()
 
