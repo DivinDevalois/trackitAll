@@ -1,7 +1,7 @@
 import enum
 from datetime import date, datetime
 
-from sqlalchemy import Date, DateTime, Enum, String, Text, func
+from sqlalchemy import Date, DateTime, Enum, ForeignKey, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base
@@ -34,6 +34,7 @@ class Task(Base):
         default=TaskPriority.MEDIUM,
     )
     due_date: Mapped[date | None] = mapped_column(Date)
+    project_id: Mapped[int | None] = mapped_column(ForeignKey("project.id"))
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )

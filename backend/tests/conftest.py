@@ -7,6 +7,8 @@ from alembic.config import Config
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 
+import app.models  # noqa: F401  (registers models on Base.metadata)
+from app.db.base import Base
 from app.db.config import POSTGRES_TEST_DB, database_url
 
 BACKEND_ROOT = Path(__file__).resolve().parents[1]
@@ -42,5 +44,6 @@ def db_session(db_engine):
         yield session
     finally:
         session.close()
+        table_names = ", ".join(t.name for t in Base.metadata.sorted_tables)
         with db_engine.begin() as conn:
-            conn.execute(text("TRUNCATE TABLE task RESTART IDENTITY CASCADE"))
+            conn.execute(text(f"TRUNCATE TABLE {table_names} RESTART IDENTITY CASCADE"))
