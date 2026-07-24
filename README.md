@@ -30,3 +30,21 @@ docker compose exec db pg_isready -U trackitall -d trackitall
 ```
 
 Pour l'arrêter : `docker compose down` (les données persistent dans le volume `pgdata`, `docker compose down -v` les supprime).
+
+## Lancer l'API
+
+```bash
+cd backend
+uv run uvicorn app.main:app --reload --port 8000
+```
+
+Doc interactive : http://127.0.0.1:8000/docs
+
+## Lancer le client Streamlit
+
+```bash
+cd frontend
+uv run streamlit run app.py
+```
+
+Le client appelle l'API en HTTP (`API_BASE_URL`, par défaut `http://127.0.0.1:8000`) — il n'accède jamais directement à la base.
