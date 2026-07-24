@@ -1,0 +1,6 @@
+[project]
+name = "trackitall-backend"
+version = "0.1.0"
+description = "TrackItAll backend — API and analytics layer"
+requires-python = ">=3.12"
+dependencies = []
