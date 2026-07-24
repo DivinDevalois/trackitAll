@@ -15,3 +15,18 @@ Projet personnel, non destiné à la commercialisation : objectifs d'apprentissa
 ## Stack
 
 Python (FastAPI, SQLAlchemy, Alembic) + PostgreSQL + Streamlit. Développement et exécution en local uniquement pour l'instant.
+
+## Lancer la base de données
+
+```bash
+cp .env.example .env
+docker compose up -d
+```
+
+Vérifier que la base est accessible :
+
+```bash
+docker compose exec db pg_isready -U trackitall -d trackitall
+```
+
+Pour l'arrêter : `docker compose down` (les données persistent dans le volume `pgdata`, `docker compose down -v` les supprime).
