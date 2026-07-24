@@ -84,3 +84,11 @@ def get_habit_metrics(habit_id: int | None = None) -> list[dict]:
     response = requests.get(f"{API_BASE_URL}/analytics/habits", params=params)
     response.raise_for_status()
     return response.json()
+
+
+def get_habit_task_correlation(window_days: int = 30) -> dict:
+    response = requests.get(
+        f"{API_BASE_URL}/analytics/correlation", params={"window_days": window_days}
+    )
+    response.raise_for_status()
+    return response.json()

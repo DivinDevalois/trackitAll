@@ -3,7 +3,7 @@ from datetime import date, timedelta
 import pandas as pd
 import streamlit as st
 
-from api_client import get_habit_metrics, get_task_metrics, list_habits
+from api_client import get_habit_metrics, get_habit_task_correlation, get_task_metrics, list_habits
 
 st.set_page_config(page_title="Dashboard — TrackItAll", layout="wide")
 st.title("Dashboard")
@@ -47,3 +47,30 @@ else:
             **{"Constance (7j)": (consistency_df["consistency_rate"] * 100).round().astype(int).astype(str) + "%"}
         )[["Constance (7j)"]]
     )
+
+st.divider()
+st.subheader("Habitudes et productivité (30 derniers jours)")
+
+correlation = get_habit_task_correlation(window_days=30)
+rated_days = [d for d in correlation["days"] if d["habit_completion_rate"] is not None]
+
+if not rated_days:
+    st.info("Pas encore assez de données (il faut au moins une habitude créée).")
+else:
+    good = correlation["avg_tasks_completed_on_good_habit_days"]
+    bad = correlation["avg_tasks_completed_on_bad_habit_days"]
+
+    col1, col2 = st.columns(2)
+    with col1:
+        st.metric(
+            "Tâches terminées / jour — bonne constance (≥50%)",
+            f"{good:.1f}" if good is not None else "—",
+        )
+    with col2:
+        st.metric(
+            "Tâches terminées / jour — mauvaise constance (<50%)",
+            f"{bad:.1f}" if bad is not None else "—",
+        )
+
+    corr_df = pd.DataFrame(rated_days).set_index("day")
+    st.scatter_chart(corr_df, x="habit_completion_rate", y="tasks_completed")
