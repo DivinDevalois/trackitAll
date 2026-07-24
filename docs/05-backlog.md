@@ -32,4 +32,30 @@ Chaque ticket est indépendant, testable, et assez petit pour être livré en un
 | TIA-19 | Client Streamlit — formulaires de saisie | Pages Streamlit pour créer/lister tâches et habitudes, via l'API HTTP (pas d'accès direct à la base). | Formulaires fonctionnels testés manuellement contre l'API locale. | M |
 | TIA-20 | Client Streamlit — dashboard KPI | Page Streamlit affichant les KPI de `/analytics/...` (vélocité, constance). | Dashboard affiche des données réelles issues de l'API, testé manuellement. | M |
 
-On attaque TIA-9.
+Sprint 2 release sur `main` le 2026-07-24.
+
+## Ad hoc (hors sprint planifié, entre Sprint 2 et Sprint 3)
+
+| ID | Titre | Description | Critère d'acceptation | Taille |
+|---|---|---|---|---|
+| TIA-21 | Lien Task-Project bout en bout | `project_id` exposé dans l'API Task (création + lecture + filtre), validation que le projet existe. | Tests d'intégration ; testé manuellement via l'API et Streamlit. | S |
+| TIA-22 | Corrélation habitudes/productivité | `GET /analytics/correlation` : taux de constance des habitudes vs tâches terminées par jour, sur une fenêtre glissante. | Tests d'intégration avec jeu de données connu ; testé manuellement. | M |
+| TIA-23 | Page Projets (Streamlit) + fix cascade delete | CRUD Project dans Streamlit ; migration pour `ON DELETE SET NULL` sur `task.project_id` (bug trouvé : suppression d'un projet avec tâches plantait en 500). | Test de régression sur la suppression ; testé manuellement. | M |
+
+Release sur `main` le 2026-07-24.
+
+## Sprint 3 — Finances
+
+Le scope MVP a été étendu à Finances le 2026-07-24 (voir `02-mvp-scope.md`), une fois le pattern Tâches/Habitudes validé de bout en bout. Même découpage que le Sprint 2.
+
+| ID | Titre | Description | Critère d'acceptation | Taille |
+|---|---|---|---|---|
+| TIA-24 | Modèle `Transaction` + migration | Modèle SQLAlchemy `Transaction` (date, montant, type revenu/dépense, catégorie texte libre, description optionnelle). | Migration Alembic générée et appliquée ; table `transaction` visible en base. | S |
+| TIA-25 | Repository `Transaction` (CRUD) | Classe repository avec create/get/list/update/delete. | Tests d'intégration couvrant chaque méthode sur la base de test. | M |
+| TIA-26 | Endpoints API `Transaction` | `POST /transactions`, `GET /transactions`, `GET /transactions/{id}`, `PATCH /transactions/{id}`, `DELETE /transactions/{id}`. | Tests d'intégration sur chaque endpoint (cas nominal + id inexistant). | M |
+| TIA-27 | Vue SQL analytics finances | Vue `v_daily_finance_metrics` (revenus/dépenses par jour et par catégorie). | Requête sur la vue testée en intégration, avec un jeu de transactions connu. | M |
+| TIA-28 | Endpoint `/analytics/finances` | `GET /analytics/finances` exposant la vue ci-dessus, avec filtre optionnel par catégorie. | Tests d'intégration vérifiant la forme et le contenu de la réponse. | S |
+| TIA-29 | Client Streamlit — page Finances | Formulaire de saisie + liste des transactions, via l'API HTTP. | Formulaire fonctionnel testé manuellement contre l'API locale. | M |
+| TIA-30 | Client Streamlit — dashboard finances | Section dashboard affichant l'évolution des dépenses/revenus dans le temps et par catégorie. | Dashboard affiche des données réelles issues de l'API, testé manuellement. | M |
+
+On attaque TIA-24.
