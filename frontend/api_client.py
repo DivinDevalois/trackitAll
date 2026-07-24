@@ -56,3 +56,16 @@ def check_in_habit(habit_id: int, check_in_date: str, *, completed: bool = True)
     )
     response.raise_for_status()
     return response.json()
+
+
+def get_task_metrics() -> list[dict]:
+    response = requests.get(f"{API_BASE_URL}/analytics/tasks")
+    response.raise_for_status()
+    return response.json()
+
+
+def get_habit_metrics(habit_id: int | None = None) -> list[dict]:
+    params = {"habit_id": habit_id} if habit_id is not None else {}
+    response = requests.get(f"{API_BASE_URL}/analytics/habits", params=params)
+    response.raise_for_status()
+    return response.json()
