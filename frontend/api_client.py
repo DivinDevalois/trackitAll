@@ -67,10 +67,24 @@ def list_projects() -> list[dict]:
     return response.json()
 
 
-def create_project(*, name: str) -> dict:
-    response = requests.post(f"{API_BASE_URL}/projects", json={"name": name})
+def create_project(*, name: str, description: str | None = None) -> dict:
+    payload: dict = {"name": name}
+    if description:
+        payload["description"] = description
+    response = requests.post(f"{API_BASE_URL}/projects", json=payload)
     response.raise_for_status()
     return response.json()
+
+
+def update_project(project_id: int, *, name: str) -> dict:
+    response = requests.patch(f"{API_BASE_URL}/projects/{project_id}", json={"name": name})
+    response.raise_for_status()
+    return response.json()
+
+
+def delete_project(project_id: int) -> None:
+    response = requests.delete(f"{API_BASE_URL}/projects/{project_id}")
+    response.raise_for_status()
 
 
 def get_task_metrics() -> list[dict]:
