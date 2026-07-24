@@ -1,9 +1,24 @@
 import streamlit as st
 
-from api_client import create_task, list_tasks, update_task_status
+from api_client import create_project, create_task, list_projects, list_tasks, update_task_status
 
 st.set_page_config(page_title="Tâches — TrackItAll", layout="wide")
 st.title("Tâches")
+
+with st.expander("+ Nouveau projet"):
+    with st.form("create_project_form", clear_on_submit=True):
+        project_name = st.text_input("Nom du projet")
+        if st.form_submit_button("Créer le projet"):
+            if not project_name.strip():
+                st.error("Le nom est obligatoire.")
+            else:
+                create_project(name=project_name)
+                st.success("Projet créé.")
+                st.rerun()
+
+projects = list_projects()
+project_options = [None] + [p["id"] for p in projects]
+project_names = {p["id"]: p["name"] for p in projects}
 
 with st.form("create_task_form", clear_on_submit=True):
     col1, col2 = st.columns([3, 1])
@@ -12,7 +27,15 @@ with st.form("create_task_form", clear_on_submit=True):
     with col2:
         priority = st.selectbox("Priorité", ["low", "medium", "high"], index=1)
     description = st.text_area("Description", placeholder="Optionnel")
-    due_date = st.date_input("Échéance", value=None)
+    col3, col4 = st.columns(2)
+    with col3:
+        due_date = st.date_input("Échéance", value=None)
+    with col4:
+        project_id = st.selectbox(
+            "Projet",
+            project_options,
+            format_func=lambda pid: "Aucun projet" if pid is None else project_names[pid],
+        )
     submitted = st.form_submit_button("Créer la tâche", use_container_width=True)
 
     if submitted:
@@ -24,6 +47,7 @@ with st.form("create_task_form", clear_on_submit=True):
                 description=description or None,
                 priority=priority,
                 due_date=due_date.isoformat() if due_date else None,
+                project_id=project_id,
             )
             st.success("Tâche créée.")
             st.rerun()
@@ -46,6 +70,8 @@ else:
                 st.markdown(f"{priority_icons[task['priority']]} **{task['title']}**")
                 if task["description"]:
                     st.caption(task["description"])
+                if task["project_id"] is not None:
+                    st.caption(f"📁 {project_names.get(task['project_id'], '—')}")
                 if task["due_date"]:
                     st.caption(f"Échéance : {task['due_date']}")
             with col2:
