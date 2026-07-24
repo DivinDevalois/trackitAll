@@ -35,6 +35,7 @@ class Task(Base):
     )
     due_date: Mapped[date | None] = mapped_column(Date)
     project_id: Mapped[int | None] = mapped_column(ForeignKey("project.id"))
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
