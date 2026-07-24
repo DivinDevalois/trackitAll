@@ -87,6 +87,40 @@ def delete_project(project_id: int) -> None:
     response.raise_for_status()
 
 
+def list_transactions() -> list[dict]:
+    response = requests.get(f"{API_BASE_URL}/transactions")
+    response.raise_for_status()
+    return response.json()
+
+
+def create_transaction(
+    *,
+    date: str,
+    amount: str,
+    type: str,
+    category: str,
+    description: str | None = None,
+) -> dict:
+    payload: dict = {"date": date, "amount": amount, "type": type, "category": category}
+    if description:
+        payload["description"] = description
+    response = requests.post(f"{API_BASE_URL}/transactions", json=payload)
+    response.raise_for_status()
+    return response.json()
+
+
+def delete_transaction(transaction_id: int) -> None:
+    response = requests.delete(f"{API_BASE_URL}/transactions/{transaction_id}")
+    response.raise_for_status()
+
+
+def get_finance_metrics(category: str | None = None) -> list[dict]:
+    params = {"category": category} if category is not None else {}
+    response = requests.get(f"{API_BASE_URL}/analytics/finances", params=params)
+    response.raise_for_status()
+    return response.json()
+
+
 def get_task_metrics() -> list[dict]:
     response = requests.get(f"{API_BASE_URL}/analytics/tasks")
     response.raise_for_status()
