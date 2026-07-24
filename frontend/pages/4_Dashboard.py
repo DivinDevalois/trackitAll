@@ -3,7 +3,13 @@ from datetime import date, timedelta
 import pandas as pd
 import streamlit as st
 
-from api_client import get_habit_metrics, get_habit_task_correlation, get_task_metrics, list_habits
+from api_client import (
+    get_finance_metrics,
+    get_habit_metrics,
+    get_habit_task_correlation,
+    get_task_metrics,
+    list_habits,
+)
 
 st.set_page_config(page_title="Dashboard — TrackItAll", layout="wide")
 st.title("Dashboard")
@@ -74,3 +80,27 @@ else:
 
     corr_df = pd.DataFrame(rated_days).set_index("day")
     st.scatter_chart(corr_df, x="habit_completion_rate", y="tasks_completed")
+
+st.divider()
+st.subheader("Finances")
+
+finance_metrics = get_finance_metrics()
+
+if not finance_metrics:
+    st.info("Pas encore de transactions.")
+else:
+    finance_df = pd.DataFrame(finance_metrics)
+    finance_df["income"] = finance_df["income"].astype(float)
+    finance_df["expense"] = finance_df["expense"].astype(float)
+
+    st.markdown("**Évolution des revenus et dépenses**")
+    daily_totals = finance_df.groupby("day")[["income", "expense"]].sum()
+    st.line_chart(daily_totals)
+
+    st.markdown("**Dépenses par catégorie**")
+    by_category = finance_df.groupby("category")["expense"].sum().sort_values(ascending=False)
+    by_category = by_category[by_category > 0]
+    if by_category.empty:
+        st.info("Pas encore de dépenses.")
+    else:
+        st.bar_chart(by_category)
