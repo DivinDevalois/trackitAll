@@ -1,4 +1,4 @@
-from sqlalchemy import Boolean, Column, Date, Integer, MetaData, String, Table
+from sqlalchemy import Boolean, Column, Date, Integer, MetaData, Numeric, String, Table
 
 # Separate from app.db.base.Base.metadata on purpose: these Table objects
 # describe read-only SQL views (created by hand-written migrations, see
@@ -23,4 +23,13 @@ daily_habit_metrics = Table(
     Column("habit_name", String),
     Column("day", Date),
     Column("completed", Boolean),
+)
+
+daily_finance_metrics = Table(
+    "v_daily_finance_metrics",
+    metadata,
+    Column("day", Date),
+    Column("category", String),
+    Column("income", Numeric(12, 2)),
+    Column("expense", Numeric(12, 2)),
 )

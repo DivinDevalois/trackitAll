@@ -1,4 +1,5 @@
 from datetime import date
+from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict
 
@@ -30,3 +31,12 @@ class HabitTaskCorrelationSummary(BaseModel):
     days: list[HabitTaskCorrelationDay]
     avg_tasks_completed_on_good_habit_days: float | None
     avg_tasks_completed_on_bad_habit_days: float | None
+
+
+class FinanceDailyMetric(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    day: date
+    category: str
+    income: Decimal
+    expense: Decimal

@@ -81,3 +81,44 @@ def test_correlation_reflects_todays_habits_and_tasks(client):
     ]
     assert body["avg_tasks_completed_on_good_habit_days"] == 2.0
     assert body["avg_tasks_completed_on_bad_habit_days"] is None
+
+
+def test_finance_metrics_aggregates_by_day_and_category(client):
+    client.post(
+        "/transactions",
+        json={"date": "2026-07-20", "amount": "2000", "type": "income", "category": "Salaire"},
+    )
+    client.post(
+        "/transactions",
+        json={"date": "2026-07-20", "amount": "30.50", "type": "expense", "category": "Alimentation"},
+    )
+    client.post(
+        "/transactions",
+        json={"date": "2026-07-20", "amount": "15", "type": "expense", "category": "Alimentation"},
+    )
+
+    response = client.get("/analytics/finances")
+
+    assert response.status_code == 200
+    body = response.json()
+    alimentation = next(row for row in body if row["category"] == "Alimentation")
+    assert alimentation["expense"] == "45.50"
+    assert alimentation["income"] == "0.00"
+
+
+def test_finance_metrics_can_be_filtered_by_category(client):
+    client.post(
+        "/transactions",
+        json={"date": "2026-07-20", "amount": "2000", "type": "income", "category": "Salaire"},
+    )
+    client.post(
+        "/transactions",
+        json={"date": "2026-07-20", "amount": "30", "type": "expense", "category": "Alimentation"},
+    )
+
+    response = client.get("/analytics/finances?category=Salaire")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert len(body) == 1
+    assert body[0]["category"] == "Salaire"
