@@ -59,3 +59,25 @@ def test_habit_metrics_can_be_filtered_by_habit_id(client):
     body = response.json()
     assert len(body) == 1
     assert body[0]["habit_id"] == gym["id"]
+
+
+def test_correlation_reflects_todays_habits_and_tasks(client):
+    today = date.today().isoformat()
+
+    habit = client.post("/habits", json={"name": "Gym"}).json()
+    client.post(f"/habits/{habit['id']}/check-in", json={"date": today})
+
+    t1 = client.post("/tasks", json={"title": "A"}).json()
+    t2 = client.post("/tasks", json={"title": "B"}).json()
+    client.patch(f"/tasks/{t1['id']}/status", json={"status": "done"})
+    client.patch(f"/tasks/{t2['id']}/status", json={"status": "done"})
+
+    response = client.get("/analytics/correlation?window_days=1")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["days"] == [
+        {"day": today, "tasks_completed": 2, "habit_completion_rate": 1.0}
+    ]
+    assert body["avg_tasks_completed_on_good_habit_days"] == 2.0
+    assert body["avg_tasks_completed_on_bad_habit_days"] is None
