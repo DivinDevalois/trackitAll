@@ -5,7 +5,7 @@ import streamlit as st
 
 from api_client import get_habit_metrics, get_task_metrics, list_habits
 
-st.set_page_config(page_title="Dashboard — TrackItAll")
+st.set_page_config(page_title="Dashboard — TrackItAll", layout="wide")
 st.title("Dashboard")
 
 st.subheader("Vélocité des tâches")
