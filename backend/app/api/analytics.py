@@ -2,10 +2,12 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.analytics.correlation import get_habit_task_correlation
+from app.analytics.finance_metrics import get_daily_finance_metrics
 from app.analytics.habit_metrics import get_daily_habit_metrics
 from app.analytics.task_metrics import get_daily_task_metrics
 from app.db.session import get_session
 from app.schemas.analytics import (
+    FinanceDailyMetric,
     HabitDailyMetric,
     HabitTaskCorrelationSummary,
     TaskDailyMetric,
@@ -25,6 +27,14 @@ def read_habit_metrics(
     session: Session = Depends(get_session),
 ):
     return get_daily_habit_metrics(session, habit_id=habit_id)
+
+
+@router.get("/finances", response_model=list[FinanceDailyMetric])
+def read_finance_metrics(
+    category: str | None = Query(default=None),
+    session: Session = Depends(get_session),
+):
+    return get_daily_finance_metrics(session, category=category)
 
 
 @router.get("/correlation", response_model=HabitTaskCorrelationSummary)
