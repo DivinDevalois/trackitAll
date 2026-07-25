@@ -1,6 +1,7 @@
 from datetime import date, timedelta
 
 import pandas as pd
+import plotly.graph_objects as go
 import streamlit as st
 
 from api_client import (
@@ -10,6 +11,7 @@ from api_client import (
     get_task_metrics,
     list_habits,
 )
+from chart_theme import GRIDLINE, base_layout, date_axis, series_color
 
 st.set_page_config(page_title="Dashboard — TrackItAll", layout="wide")
 st.title("Dashboard")
@@ -20,8 +22,24 @@ task_metrics = get_task_metrics()
 if not task_metrics:
     st.info("Pas encore de données de tâches.")
 else:
-    velocity_df = pd.DataFrame(task_metrics).set_index("day")
-    st.bar_chart(velocity_df[["tasks_created", "tasks_completed"]])
+    velocity_df = pd.DataFrame(task_metrics)
+    fig = go.Figure()
+    fig.add_bar(
+        x=velocity_df["day"],
+        y=velocity_df["tasks_created"],
+        name="Créées",
+        marker_color=series_color(0),
+    )
+    fig.add_bar(
+        x=velocity_df["day"],
+        y=velocity_df["tasks_completed"],
+        name="Terminées",
+        marker_color=series_color(1),
+    )
+    fig.update_layout(
+        **base_layout(show_legend=True, barmode="group", height=320, xaxis=date_axis())
+    )
+    st.plotly_chart(fig, use_container_width=True)
 
 st.subheader("Constance des habitudes (7 derniers jours)")
 habits = list_habits()
@@ -40,19 +58,23 @@ else:
         # records days that were checked in, it doesn't know about missed days.
         completed_count = sum(completed_by_day.get(day, False) for day in window_days)
         rows.append(
-            {
-                "habit": habit["name"],
-                "consistency_rate": completed_count / len(window_days),
-            }
+            {"habit": habit["name"], "consistency_rate": completed_count / len(window_days)}
         )
 
-    consistency_df = pd.DataFrame(rows).set_index("habit")
-    st.bar_chart(consistency_df["consistency_rate"])
-    st.dataframe(
-        consistency_df.assign(
-            **{"Constance (7j)": (consistency_df["consistency_rate"] * 100).round().astype(int).astype(str) + "%"}
-        )[["Constance (7j)"]]
+    consistency_df = pd.DataFrame(rows).sort_values("consistency_rate", ascending=True)
+    fig = go.Figure()
+    fig.add_bar(
+        x=consistency_df["consistency_rate"] * 100,
+        y=consistency_df["habit"],
+        orientation="h",
+        marker_color=series_color(0),
+        text=(consistency_df["consistency_rate"] * 100).round().astype(int).astype(str) + "%",
+        textposition="outside",
     )
+    fig.update_layout(
+        **base_layout(height=max(220, 60 * len(consistency_df)), xaxis=dict(range=[0, 105]))
+    )
+    st.plotly_chart(fig, use_container_width=True)
 
 st.divider()
 st.subheader("Habitudes et productivité (30 derniers jours)")
@@ -78,8 +100,24 @@ else:
             f"{bad:.1f}" if bad is not None else "—",
         )
 
-    corr_df = pd.DataFrame(rated_days).set_index("day")
-    st.scatter_chart(corr_df, x="habit_completion_rate", y="tasks_completed")
+    corr_df = pd.DataFrame(rated_days)
+    fig = go.Figure()
+    fig.add_scatter(
+        x=corr_df["habit_completion_rate"] * 100,
+        y=corr_df["tasks_completed"],
+        mode="markers",
+        marker=dict(color=series_color(0), size=10, line=dict(width=2, color="white")),
+        text=corr_df["day"],
+        hovertemplate="%{text}<br>Constance : %{x:.0f}%<br>Tâches terminées : %{y}<extra></extra>",
+    )
+    fig.update_layout(
+        **base_layout(
+            height=320,
+            xaxis=dict(title="Constance des habitudes (%)", gridcolor=GRIDLINE, range=[-5, 105]),
+            yaxis=dict(title="Tâches terminées", gridcolor=GRIDLINE),
+        )
+    )
+    st.plotly_chart(fig, use_container_width=True)
 
 st.divider()
 st.subheader("Finances")
@@ -94,13 +132,48 @@ else:
     finance_df["expense"] = finance_df["expense"].astype(float)
 
     st.markdown("**Évolution des revenus et dépenses**")
-    daily_totals = finance_df.groupby("day")[["income", "expense"]].sum()
-    st.line_chart(daily_totals)
+    daily_totals = finance_df.groupby("day", as_index=False)[["income", "expense"]].sum()
+    fig = go.Figure()
+    fig.add_scatter(
+        x=daily_totals["day"],
+        y=daily_totals["income"],
+        name="Revenus",
+        mode="lines+markers",
+        line=dict(color=series_color(0), width=2),
+        marker=dict(size=8),
+    )
+    fig.add_scatter(
+        x=daily_totals["day"],
+        y=daily_totals["expense"],
+        name="Dépenses",
+        mode="lines+markers",
+        line=dict(color=series_color(1), width=2),
+        marker=dict(size=8),
+    )
+    fig.update_layout(**base_layout(show_legend=True, height=320, xaxis=date_axis()))
+    st.plotly_chart(fig, use_container_width=True)
 
     st.markdown("**Dépenses par catégorie**")
-    by_category = finance_df.groupby("category")["expense"].sum().sort_values(ascending=False)
-    by_category = by_category[by_category > 0]
+    by_category = (
+        finance_df.groupby("category", as_index=False)["expense"].sum().query("expense > 0")
+    )
+    by_category = by_category.sort_values("expense", ascending=True)
     if by_category.empty:
         st.info("Pas encore de dépenses.")
     else:
-        st.bar_chart(by_category)
+        fig = go.Figure()
+        fig.add_bar(
+            x=by_category["expense"],
+            y=by_category["category"],
+            orientation="h",
+            marker_color=series_color(0),
+            text=by_category["expense"].map(lambda v: f"{v:.2f} €"),
+            textposition="outside",
+        )
+        fig.update_layout(
+            **base_layout(
+                height=max(220, 60 * len(by_category)),
+                xaxis=dict(range=[0, by_category["expense"].max() * 1.2]),
+            )
+        )
+        st.plotly_chart(fig, use_container_width=True)
