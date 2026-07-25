@@ -44,3 +44,10 @@ class FinanceDailyMetric(BaseModel):
 
 class FinanceBalance(BaseModel):
     balance: Decimal
+
+
+class HabitStreak(BaseModel):
+    habit_id: int
+    habit_name: str
+    current_streak: int
+    longest_streak: int
