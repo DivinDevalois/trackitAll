@@ -30,6 +30,24 @@ def test_create_habit_missing_name_returns_422(client):
     assert response.status_code == 422
 
 
+def test_create_break_habit_with_description_and_target_time(client):
+    response = client.post(
+        "/habits",
+        json={
+            "name": "Ne pas procrastiner",
+            "description": "Éviter de remettre au lendemain",
+            "type": "break",
+            "target_time": "09:00:00",
+        },
+    )
+
+    assert response.status_code == 201
+    body = response.json()
+    assert body["type"] == "break"
+    assert body["description"] == "Éviter de remettre au lendemain"
+    assert body["target_time"] == "09:00:00"
+
+
 def test_list_habits_returns_created_habits(client):
     client.post("/habits", json={"name": "First"})
     client.post("/habits", json={"name": "Second"})
@@ -73,5 +91,49 @@ def test_check_in_twice_same_day_updates_instead_of_duplicating(client):
 
 def test_check_in_returns_404_for_unknown_habit(client):
     response = client.post("/habits/999/check-in", json={"date": "2026-07-24"})
+
+    assert response.status_code == 404
+
+
+def test_check_in_accepts_duration_minutes(client):
+    habit = client.post("/habits", json={"name": "Gym"}).json()
+
+    response = client.post(
+        f"/habits/{habit['id']}/check-in",
+        json={"date": "2026-07-24", "duration_minutes": 20},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["duration_minutes"] == 20
+
+
+def test_update_habit_changes_fields(client):
+    created = client.post("/habits", json={"name": "Old name"}).json()
+
+    response = client.patch(f"/habits/{created['id']}", json={"name": "New name", "type": "break"})
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["name"] == "New name"
+    assert body["type"] == "break"
+
+
+def test_update_habit_returns_404_for_unknown_id(client):
+    response = client.patch("/habits/999", json={"name": "Whatever"})
+
+    assert response.status_code == 404
+
+
+def test_delete_habit_returns_204(client):
+    created = client.post("/habits", json={"name": "To delete"}).json()
+
+    response = client.delete(f"/habits/{created['id']}")
+
+    assert response.status_code == 204
+    assert client.get(f"/habits/{created['id']}").status_code == 404
+
+
+def test_delete_habit_returns_404_for_unknown_id(client):
+    response = client.delete("/habits/999")
 
     assert response.status_code == 404
