@@ -4,12 +4,14 @@ from sqlalchemy.orm import Session
 from app.analytics.correlation import get_habit_task_correlation
 from app.analytics.finance_metrics import get_balance, get_daily_finance_metrics
 from app.analytics.habit_metrics import get_daily_habit_metrics
+from app.analytics.streaks import get_habit_streaks
 from app.analytics.task_metrics import get_daily_task_metrics
 from app.db.session import get_session
 from app.schemas.analytics import (
     FinanceBalance,
     FinanceDailyMetric,
     HabitDailyMetric,
+    HabitStreak,
     HabitTaskCorrelationSummary,
     TaskDailyMetric,
 )
@@ -41,6 +43,11 @@ def read_finance_metrics(
 @router.get("/finances/balance", response_model=FinanceBalance)
 def read_finance_balance(session: Session = Depends(get_session)):
     return {"balance": get_balance(session)}
+
+
+@router.get("/streaks", response_model=list[HabitStreak])
+def read_habit_streaks(session: Session = Depends(get_session)):
+    return get_habit_streaks(session)
 
 
 @router.get("/correlation", response_model=HabitTaskCorrelationSummary)

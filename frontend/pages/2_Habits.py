@@ -7,6 +7,7 @@ from api_client import (
     create_habit,
     delete_habit,
     get_habit_metrics,
+    get_habit_streaks,
     list_habits,
     set_habit_active,
 )
@@ -57,6 +58,7 @@ habits = list_habits()
 today = date.today().isoformat()
 active_habits = [h for h in habits if h["is_active"]]
 paused_habits = [h for h in habits if not h["is_active"]]
+streaks_by_habit = {s["habit_id"]: s for s in get_habit_streaks()}
 
 if not habits:
     st.info("Aucune habitude pour l'instant — crée-en une ci-dessus.")
@@ -69,10 +71,13 @@ else:
         with st.container(border=True):
             col1, col2, col3, col4 = st.columns([3, 2, 1, 1])
             with col1:
-                st.markdown(f"{type_icons[habit['type']]} **{habit['name']}**")
+                streak = streaks_by_habit.get(habit["id"], {"current_streak": 0, "longest_streak": 0})
+                streak_badge = f" · 🔥 {streak['current_streak']}j" if streak["current_streak"] > 0 else ""
+                st.markdown(f"{type_icons[habit['type']]} **{habit['name']}**{streak_badge}")
                 st.caption(
                     f"{type_labels[habit['type']]} · {habit['target_frequency_per_week']}x / semaine"
                     + (f" · {habit['target_time']}" if habit["target_time"] else "")
+                    + f" · Record : {streak['longest_streak']}j"
                 )
                 if habit["description"]:
                     st.caption(habit["description"])

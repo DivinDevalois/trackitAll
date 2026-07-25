@@ -7,6 +7,7 @@ import streamlit as st
 from api_client import (
     get_finance_metrics,
     get_habit_metrics,
+    get_habit_streaks,
     get_habit_task_correlation,
     get_task_metrics,
     list_habits,
@@ -75,6 +76,25 @@ else:
         **base_layout(height=max(220, 60 * len(consistency_df)), xaxis=dict(range=[0, 105]))
     )
     st.plotly_chart(fig, use_container_width=True)
+
+st.subheader("Streaks")
+streaks = get_habit_streaks()
+
+if not streaks:
+    st.info("Pas encore d'habitudes.")
+else:
+    streaks_df = pd.DataFrame(streaks).sort_values("current_streak", ascending=False)
+    st.dataframe(
+        streaks_df.assign(
+            **{
+                "Habitude": streaks_df["habit_name"],
+                "Streak actuel": streaks_df["current_streak"].astype(str) + " j",
+                "Record": streaks_df["longest_streak"].astype(str) + " j",
+            }
+        )[["Habitude", "Streak actuel", "Record"]],
+        hide_index=True,
+        use_container_width=True,
+    )
 
 st.divider()
 st.subheader("Habitudes et productivité (30 derniers jours)")

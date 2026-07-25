@@ -193,3 +193,9 @@ def get_habit_task_correlation(window_days: int = 30) -> dict:
     )
     response.raise_for_status()
     return response.json()
+
+
+def get_habit_streaks() -> list[dict]:
+    response = requests.get(f"{API_BASE_URL}/analytics/streaks")
+    response.raise_for_status()
+    return response.json()
