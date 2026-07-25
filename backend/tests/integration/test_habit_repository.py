@@ -1,5 +1,8 @@
+from datetime import time
+
 import pytest
 
+from app.models.habit import HabitType
 from app.repositories.habit_repository import HabitRepository
 
 
@@ -8,12 +11,28 @@ def repo(db_session):
     return HabitRepository(db_session)
 
 
-def test_create_sets_default_frequency(repo):
+def test_create_sets_defaults(repo):
     habit = repo.create(name="Read 20 minutes")
 
     assert habit.id is not None
     assert habit.name == "Read 20 minutes"
     assert habit.target_frequency_per_week == 7
+    assert habit.type == HabitType.BUILD
+    assert habit.description is None
+    assert habit.target_time is None
+
+
+def test_create_accepts_break_type_description_and_target_time(repo):
+    habit = repo.create(
+        name="Ne pas procrastiner",
+        description="Éviter de remettre les tâches importantes au lendemain",
+        type=HabitType.BREAK,
+        target_time=time(9, 0),
+    )
+
+    assert habit.type == HabitType.BREAK
+    assert habit.description == "Éviter de remettre les tâches importantes au lendemain"
+    assert habit.target_time == time(9, 0)
 
 
 def test_create_accepts_explicit_frequency(repo):
@@ -47,6 +66,22 @@ def test_update_changes_fields(repo):
 
 def test_update_returns_none_for_unknown_id(repo):
     assert repo.update(999, name="Whatever") is None
+
+
+def test_update_changes_enriched_fields(repo):
+    created = repo.create(name="Gym", type=HabitType.BUILD)
+
+    updated = repo.update(
+        created.id,
+        description="Updated description",
+        type=HabitType.BREAK,
+        target_time=time(18, 30),
+    )
+
+    assert updated is not None
+    assert updated.description == "Updated description"
+    assert updated.type == HabitType.BREAK
+    assert updated.target_time == time(18, 30)
 
 
 def test_delete_removes_habit(repo):

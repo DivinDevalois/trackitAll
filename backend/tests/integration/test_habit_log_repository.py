@@ -58,3 +58,16 @@ def test_list_for_habit_does_not_include_other_habits(log_repo, habit_repo, habi
     log_repo.check_in(other_habit.id, date(2026, 7, 24))
 
     assert log_repo.list_for_habit(habit.id) == []
+
+
+def test_check_in_accepts_duration_minutes(log_repo, habit):
+    log = log_repo.check_in(habit.id, date(2026, 7, 24), duration_minutes=20)
+
+    assert log.duration_minutes == 20
+
+
+def test_check_in_twice_same_day_updates_duration(log_repo, habit):
+    log_repo.check_in(habit.id, date(2026, 7, 24), duration_minutes=20)
+    updated = log_repo.check_in(habit.id, date(2026, 7, 24), duration_minutes=35)
+
+    assert updated.duration_minutes == 35
