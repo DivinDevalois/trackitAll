@@ -22,6 +22,7 @@ def test_create_project_returns_201(client):
     body = response.json()
     assert body["name"] == "TrackItAll"
     assert body["description"] is None
+    assert body["status"] == "active"
     assert body["id"] is not None
 
 
@@ -70,6 +71,15 @@ def test_update_project_returns_404_for_unknown_id(client):
     response = client.patch("/projects/999", json={"name": "Whatever"})
 
     assert response.status_code == 404
+
+
+def test_update_project_changes_status(client):
+    created = client.post("/projects", json={"name": "Project"}).json()
+
+    response = client.patch(f"/projects/{created['id']}", json={"status": "archived"})
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "archived"
 
 
 def test_delete_project_returns_204(client):
