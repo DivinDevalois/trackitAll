@@ -24,3 +24,6 @@ uv.lock.tmp
 
 # Docker
 pgdata/
+
+# Database backups (personal data — never commit)
+backups/
