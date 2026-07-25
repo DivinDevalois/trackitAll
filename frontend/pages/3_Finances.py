@@ -2,10 +2,13 @@ from datetime import date
 
 import streamlit as st
 
-from api_client import create_transaction, delete_transaction, list_transactions
+from api_client import create_transaction, delete_transaction, get_finance_balance, list_transactions
 
 st.set_page_config(page_title="Finances — TrackItAll", layout="wide")
 st.title("Finances")
+
+balance = float(get_finance_balance()["balance"])
+st.metric("Solde", f"{balance:.2f} €")
 
 type_labels = {"income": "Revenu", "expense": "Dépense"}
 

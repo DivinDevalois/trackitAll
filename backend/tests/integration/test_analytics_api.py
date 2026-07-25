@@ -122,3 +122,30 @@ def test_finance_metrics_can_be_filtered_by_category(client):
     body = response.json()
     assert len(body) == 1
     assert body[0]["category"] == "Salaire"
+
+
+def test_finance_balance_is_income_minus_expenses(client):
+    client.post(
+        "/transactions",
+        json={"date": "2026-07-20", "amount": "2000", "type": "income", "category": "Salaire"},
+    )
+    client.post(
+        "/transactions",
+        json={"date": "2026-07-20", "amount": "30.50", "type": "expense", "category": "Alimentation"},
+    )
+    client.post(
+        "/transactions",
+        json={"date": "2026-07-21", "amount": "50", "type": "expense", "category": "Transport"},
+    )
+
+    response = client.get("/analytics/finances/balance")
+
+    assert response.status_code == 200
+    assert response.json() == {"balance": "1919.50"}
+
+
+def test_finance_balance_is_zero_with_no_transactions(client):
+    response = client.get("/analytics/finances/balance")
+
+    assert response.status_code == 200
+    assert response.json() == {"balance": "0"}
