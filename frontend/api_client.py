@@ -121,6 +121,12 @@ def get_finance_metrics(category: str | None = None) -> list[dict]:
     return response.json()
 
 
+def get_finance_balance() -> dict:
+    response = requests.get(f"{API_BASE_URL}/analytics/finances/balance")
+    response.raise_for_status()
+    return response.json()
+
+
 def get_task_metrics() -> list[dict]:
     response = requests.get(f"{API_BASE_URL}/analytics/tasks")
     response.raise_for_status()
