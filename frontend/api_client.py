@@ -43,20 +43,44 @@ def list_habits() -> list[dict]:
     return response.json()
 
 
-def create_habit(*, name: str, target_frequency_per_week: int) -> dict:
-    response = requests.post(
-        f"{API_BASE_URL}/habits",
-        json={"name": name, "target_frequency_per_week": target_frequency_per_week},
-    )
+def create_habit(
+    *,
+    name: str,
+    target_frequency_per_week: int,
+    description: str | None = None,
+    type: str = "build",
+    target_time: str | None = None,
+) -> dict:
+    payload: dict = {
+        "name": name,
+        "target_frequency_per_week": target_frequency_per_week,
+        "type": type,
+    }
+    if description:
+        payload["description"] = description
+    if target_time:
+        payload["target_time"] = target_time
+    response = requests.post(f"{API_BASE_URL}/habits", json=payload)
     response.raise_for_status()
     return response.json()
 
 
-def check_in_habit(habit_id: int, check_in_date: str, *, completed: bool = True) -> dict:
-    response = requests.post(
-        f"{API_BASE_URL}/habits/{habit_id}/check-in",
-        json={"date": check_in_date, "completed": completed},
-    )
+def delete_habit(habit_id: int) -> None:
+    response = requests.delete(f"{API_BASE_URL}/habits/{habit_id}")
+    response.raise_for_status()
+
+
+def check_in_habit(
+    habit_id: int,
+    check_in_date: str,
+    *,
+    completed: bool = True,
+    duration_minutes: int | None = None,
+) -> dict:
+    payload: dict = {"date": check_in_date, "completed": completed}
+    if duration_minutes is not None:
+        payload["duration_minutes"] = duration_minutes
+    response = requests.post(f"{API_BASE_URL}/habits/{habit_id}/check-in", json=payload)
     response.raise_for_status()
     return response.json()
 
