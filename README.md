@@ -16,6 +16,19 @@ Projet personnel, non destiné à la commercialisation : objectifs d'apprentissa
 
 Python (FastAPI, SQLAlchemy, Alembic) + PostgreSQL + Streamlit. Développement et exécution en local uniquement pour l'instant.
 
+## Démarrage rapide
+
+```bash
+cp .env.example .env   # première fois seulement
+./start.sh
+```
+
+Lance la base Postgres, l'API et Streamlit d'un coup. App sur http://127.0.0.1:8501, doc API sur http://127.0.0.1:8000/docs. Pour tout arrêter : `./stop.sh` (les données restent).
+
+Une sauvegarde quotidienne automatique de la base tourne via `launchd` (`scripts/backup_db.sh`, voir `~/Library/LaunchAgents/com.trackitall.backup.plist`) — fichiers dans `backups/`.
+
+Le détail de chaque étape (utile pour comprendre ou déboguer) :
+
 ## Lancer la base de données
 
 ```bash
