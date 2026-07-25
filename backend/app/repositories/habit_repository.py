@@ -18,6 +18,7 @@ class HabitRepository:
         type: HabitType = HabitType.BUILD,
         target_frequency_per_week: int = 7,
         target_time: dt.time | None = None,
+        is_active: bool = True,
     ) -> Habit:
         habit = Habit(
             name=name,
@@ -25,6 +26,7 @@ class HabitRepository:
             type=type,
             target_frequency_per_week=target_frequency_per_week,
             target_time=target_time,
+            is_active=is_active,
         )
         self.session.add(habit)
         self.session.commit()
@@ -34,8 +36,11 @@ class HabitRepository:
     def get(self, habit_id: int) -> Habit | None:
         return self.session.get(Habit, habit_id)
 
-    def list(self) -> list[Habit]:
-        return list(self.session.scalars(select(Habit).order_by(Habit.id)))
+    def list(self, *, active_only: bool = False) -> list[Habit]:
+        stmt = select(Habit).order_by(Habit.id)
+        if active_only:
+            stmt = stmt.where(Habit.is_active.is_(True))
+        return list(self.session.scalars(stmt))
 
     def update(
         self,
@@ -46,6 +51,7 @@ class HabitRepository:
         type: HabitType | None = None,
         target_frequency_per_week: int | None = None,
         target_time: dt.time | None = None,
+        is_active: bool | None = None,
     ) -> Habit | None:
         habit = self.session.get(Habit, habit_id)
         if habit is None:
@@ -60,6 +66,8 @@ class HabitRepository:
             habit.target_frequency_per_week = target_frequency_per_week
         if target_time is not None:
             habit.target_time = target_time
+        if is_active is not None:
+            habit.is_active = is_active
         self.session.commit()
         self.session.refresh(habit)
         return habit

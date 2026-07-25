@@ -1,7 +1,7 @@
 import datetime as dt
 import enum
 
-from sqlalchemy import DateTime, Enum, Integer, String, Text, Time, func
+from sqlalchemy import Boolean, DateTime, Enum, Integer, String, Text, Time, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base
@@ -28,6 +28,7 @@ class Habit(Base):
     )
     target_frequency_per_week: Mapped[int] = mapped_column(Integer, default=7)
     target_time: Mapped[dt.time | None] = mapped_column(Time)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[dt.datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )

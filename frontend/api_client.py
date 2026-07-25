@@ -82,6 +82,12 @@ def delete_habit(habit_id: int) -> None:
     response.raise_for_status()
 
 
+def set_habit_active(habit_id: int, is_active: bool) -> dict:
+    response = requests.patch(f"{API_BASE_URL}/habits/{habit_id}", json={"is_active": is_active})
+    response.raise_for_status()
+    return response.json()
+
+
 def check_in_habit(
     habit_id: int,
     check_in_date: str,

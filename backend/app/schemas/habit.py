@@ -13,6 +13,7 @@ class HabitCreate(BaseModel):
     type: HabitType = HabitType.BUILD
     target_frequency_per_week: int = Field(default=7, ge=1, le=7)
     target_time: time_type | None = None
+    is_active: bool = True
 
 
 class HabitUpdate(BaseModel):
@@ -21,6 +22,7 @@ class HabitUpdate(BaseModel):
     type: HabitType | None = None
     target_frequency_per_week: int | None = Field(default=None, ge=1, le=7)
     target_time: time_type | None = None
+    is_active: bool | None = None
 
 
 class HabitRead(BaseModel):
@@ -32,6 +34,7 @@ class HabitRead(BaseModel):
     type: HabitType
     target_frequency_per_week: int
     target_time: time_type | None
+    is_active: bool
     created_at: datetime
     updated_at: datetime
 
