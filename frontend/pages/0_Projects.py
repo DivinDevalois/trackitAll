@@ -1,6 +1,14 @@
 import streamlit as st
 
-from api_client import create_project, delete_project, list_projects, list_tasks, update_project
+from api_client import (
+    create_project,
+    create_task,
+    delete_project,
+    list_projects,
+    list_tasks,
+    update_project,
+    update_task_status,
+)
 
 st.set_page_config(page_title="Projets — TrackItAll", layout="wide")
 st.title("Projets")
@@ -26,10 +34,13 @@ projects = list_projects()
 if not projects:
     st.info("Aucun projet pour l'instant — crée-en un ci-dessus.")
 else:
-    tasks_by_project: dict[int, int] = {}
+    tasks_by_project: dict[int, list[dict]] = {}
     for task in list_tasks():
         if task["project_id"] is not None:
-            tasks_by_project[task["project_id"]] = tasks_by_project.get(task["project_id"], 0) + 1
+            tasks_by_project.setdefault(task["project_id"], []).append(task)
+
+    statuses = ["todo", "in_progress", "done"]
+    status_labels = {"todo": "À faire", "in_progress": "En cours", "done": "Terminé"}
 
     for project in projects:
         with st.container(border=True):
@@ -38,8 +49,6 @@ else:
                 st.markdown(f"📁 **{project['name']}**")
                 if project["description"]:
                     st.caption(project["description"])
-                task_count = tasks_by_project.get(project["id"], 0)
-                st.caption(f"{task_count} tâche(s) associée(s)")
             with col2:
                 with st.popover("✏️ Renommer", use_container_width=True):
                     new_name = st.text_input(
@@ -50,6 +59,54 @@ else:
                             update_project(project["id"], name=new_name)
                             st.rerun()
             with col3:
-                if st.button("🗑️ Supprimer", key=f"delete_{project['id']}", use_container_width=True):
+                if st.button(
+                    "🗑️ Supprimer", key=f"delete_{project['id']}", use_container_width=True
+                ):
                     delete_project(project["id"])
                     st.rerun()
+
+            project_tasks = tasks_by_project.get(project["id"], [])
+            with st.expander(f"Tâches ({len(project_tasks)})"):
+                with st.form(f"add_task_{project['id']}", clear_on_submit=True):
+                    task_col1, task_col2 = st.columns([4, 1])
+                    with task_col1:
+                        new_task_title = st.text_input(
+                            "Nouvelle tâche",
+                            key=f"new_task_{project['id']}",
+                            label_visibility="collapsed",
+                            placeholder="Titre de la tâche",
+                        )
+                    with task_col2:
+                        add_task = st.form_submit_button("Ajouter", use_container_width=True)
+                    if add_task:
+                        if not new_task_title.strip():
+                            st.error("Le titre est obligatoire.")
+                        else:
+                            create_task(
+                                title=new_task_title,
+                                description=None,
+                                priority="medium",
+                                due_date=None,
+                                project_id=project["id"],
+                            )
+                            st.rerun()
+
+                if not project_tasks:
+                    st.caption("Aucune tâche dans ce projet.")
+                else:
+                    for task in project_tasks:
+                        t_col1, t_col2 = st.columns([3, 2])
+                        with t_col1:
+                            st.write(task["title"])
+                        with t_col2:
+                            new_status = st.segmented_control(
+                                "Statut",
+                                options=statuses,
+                                format_func=lambda s: status_labels[s],
+                                default=task["status"],
+                                key=f"proj_status_{task['id']}",
+                                label_visibility="collapsed",
+                            )
+                            if new_status and new_status != task["status"]:
+                                update_task_status(task["id"], new_status)
+                                st.rerun()
