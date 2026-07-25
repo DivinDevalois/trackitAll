@@ -27,3 +27,6 @@ pgdata/
 
 # Database backups (personal data — never commit)
 backups/
+
+# Logs from start.sh/backup_db.sh
+*.log
