@@ -37,6 +37,18 @@ def update_task_status(task_id: int, status: str) -> dict:
     return response.json()
 
 
+def update_task(task_id: int, *, title: str, description: str | None) -> dict:
+    payload: dict = {"title": title, "description": description or ""}
+    response = requests.patch(f"{API_BASE_URL}/tasks/{task_id}", json=payload)
+    response.raise_for_status()
+    return response.json()
+
+
+def delete_task(task_id: int) -> None:
+    response = requests.delete(f"{API_BASE_URL}/tasks/{task_id}")
+    response.raise_for_status()
+
+
 def list_habits() -> list[dict]:
     response = requests.get(f"{API_BASE_URL}/habits")
     response.raise_for_status()

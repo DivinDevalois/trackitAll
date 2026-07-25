@@ -1,6 +1,13 @@
 import streamlit as st
 
-from api_client import create_task, list_projects, list_tasks, update_task_status
+from api_client import (
+    create_task,
+    delete_task,
+    list_projects,
+    list_tasks,
+    update_task,
+    update_task_status,
+)
 
 st.set_page_config(page_title="Tâches — TrackItAll", layout="wide")
 st.title("Tâches")
@@ -54,7 +61,7 @@ if not tasks:
 else:
     for task in tasks:
         with st.container(border=True):
-            col1, col2 = st.columns([4, 2])
+            col1, col2, col3, col4 = st.columns([4, 2, 1, 1])
             with col1:
                 st.markdown(f"{priority_icons[task['priority']]} **{task['title']}**")
                 if task["description"]:
@@ -74,4 +81,22 @@ else:
                 )
                 if new_status and new_status != task["status"]:
                     update_task_status(task["id"], new_status)
+                    st.rerun()
+            with col3:
+                with st.popover("✏️", use_container_width=True):
+                    new_title = st.text_input(
+                        "Titre", value=task["title"], key=f"edit_title_{task['id']}"
+                    )
+                    new_description = st.text_area(
+                        "Description",
+                        value=task["description"] or "",
+                        key=f"edit_description_{task['id']}",
+                    )
+                    if st.button("Enregistrer", key=f"save_task_{task['id']}"):
+                        if new_title.strip():
+                            update_task(task["id"], title=new_title, description=new_description)
+                            st.rerun()
+            with col4:
+                if st.button("🗑️", key=f"delete_task_{task['id']}", use_container_width=True):
+                    delete_task(task["id"])
                     st.rerun()

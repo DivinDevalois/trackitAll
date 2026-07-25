@@ -4,6 +4,7 @@ from api_client import (
     create_project,
     create_task,
     delete_project,
+    delete_task,
     list_projects,
     list_tasks,
     update_project,
@@ -95,7 +96,7 @@ else:
                     st.caption("Aucune tâche dans ce projet.")
                 else:
                     for task in project_tasks:
-                        t_col1, t_col2 = st.columns([3, 2])
+                        t_col1, t_col2, t_col3 = st.columns([3, 2, 1])
                         with t_col1:
                             st.write(task["title"])
                         with t_col2:
@@ -109,4 +110,10 @@ else:
                             )
                             if new_status and new_status != task["status"]:
                                 update_task_status(task["id"], new_status)
+                                st.rerun()
+                        with t_col3:
+                            if st.button(
+                                "🗑️", key=f"proj_delete_task_{task['id']}", use_container_width=True
+                            ):
+                                delete_task(task["id"])
                                 st.rerun()

@@ -108,3 +108,46 @@ def test_list_tasks_can_be_filtered_by_project_id(client):
     assert response.status_code == 200
     titles = [task["title"] for task in response.json()]
     assert titles == ["In project"]
+
+
+def test_update_task_changes_title_and_description(client):
+    created = client.post("/tasks", json={"title": "Old title"}).json()
+
+    response = client.patch(
+        f"/tasks/{created['id']}",
+        json={"title": "New title", "description": "New description"},
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["title"] == "New title"
+    assert body["description"] == "New description"
+
+
+def test_update_task_with_unknown_project_id_returns_400(client):
+    created = client.post("/tasks", json={"title": "Task"}).json()
+
+    response = client.patch(f"/tasks/{created['id']}", json={"project_id": 999})
+
+    assert response.status_code == 400
+
+
+def test_update_task_returns_404_for_unknown_id(client):
+    response = client.patch("/tasks/999", json={"title": "Whatever"})
+
+    assert response.status_code == 404
+
+
+def test_delete_task_returns_204(client):
+    created = client.post("/tasks", json={"title": "To delete"}).json()
+
+    response = client.delete(f"/tasks/{created['id']}")
+
+    assert response.status_code == 204
+    assert client.get(f"/tasks/{created['id']}").status_code == 404
+
+
+def test_delete_task_returns_404_for_unknown_id(client):
+    response = client.delete("/tasks/999")
+
+    assert response.status_code == 404
