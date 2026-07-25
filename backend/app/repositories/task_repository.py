@@ -51,3 +51,38 @@ class TaskRepository:
         self.session.commit()
         self.session.refresh(task)
         return task
+
+    def update(
+        self,
+        task_id: int,
+        *,
+        title: str | None = None,
+        description: str | None = None,
+        priority: TaskPriority | None = None,
+        due_date: date | None = None,
+        project_id: int | None = None,
+    ) -> Task | None:
+        task = self.session.get(Task, task_id)
+        if task is None:
+            return None
+        if title is not None:
+            task.title = title
+        if description is not None:
+            task.description = description
+        if priority is not None:
+            task.priority = priority
+        if due_date is not None:
+            task.due_date = due_date
+        if project_id is not None:
+            task.project_id = project_id
+        self.session.commit()
+        self.session.refresh(task)
+        return task
+
+    def delete(self, task_id: int) -> bool:
+        task = self.session.get(Task, task_id)
+        if task is None:
+            return False
+        self.session.delete(task)
+        self.session.commit()
+        return True

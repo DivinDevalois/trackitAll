@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from app.db.session import get_session
 from app.repositories.project_repository import ProjectRepository
 from app.repositories.task_repository import TaskRepository
-from app.schemas.task import TaskCreate, TaskRead, TaskStatusUpdate
+from app.schemas.task import TaskCreate, TaskRead, TaskStatusUpdate, TaskUpdate
 
 router = APIRouter(prefix="/tasks", tags=["tasks"])
 
@@ -57,3 +57,28 @@ def update_task_status(
     if task is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task not found")
     return task
+
+
+@router.patch("/{task_id}", response_model=TaskRead)
+def update_task(
+    task_id: int,
+    payload: TaskUpdate,
+    repo: TaskRepository = Depends(get_task_repository),
+    project_repo: ProjectRepository = Depends(get_project_repository),
+):
+    if payload.project_id is not None and project_repo.get(payload.project_id) is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Project {payload.project_id} not found",
+        )
+    task = repo.update(task_id, **payload.model_dump(exclude_unset=True))
+    if task is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task not found")
+    return task
+
+
+@router.delete("/{task_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_task(task_id: int, repo: TaskRepository = Depends(get_task_repository)):
+    deleted = repo.delete(task_id)
+    if not deleted:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task not found")

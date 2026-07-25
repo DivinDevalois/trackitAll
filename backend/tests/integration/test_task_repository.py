@@ -90,3 +90,37 @@ def test_list_can_be_filtered_by_project_id(repo, project_repo):
     tasks = repo.list(project_id=project.id)
 
     assert [t.id for t in tasks] == [in_project.id]
+
+
+def test_update_changes_title_and_description(repo):
+    created = repo.create(title="Old title", description="Old description")
+
+    updated = repo.update(created.id, title="New title", description="New description")
+
+    assert updated is not None
+    assert updated.title == "New title"
+    assert updated.description == "New description"
+
+
+def test_update_changes_project_id(repo, project_repo):
+    project = project_repo.create(name="TrackItAll")
+    created = repo.create(title="Unassigned")
+
+    updated = repo.update(created.id, project_id=project.id)
+
+    assert updated.project_id == project.id
+
+
+def test_update_returns_none_for_unknown_id(repo):
+    assert repo.update(999, title="Whatever") is None
+
+
+def test_delete_removes_task(repo):
+    created = repo.create(title="To delete")
+
+    assert repo.delete(created.id) is True
+    assert repo.get(created.id) is None
+
+
+def test_delete_returns_false_for_unknown_id(repo):
+    assert repo.delete(999) is False
