@@ -112,8 +112,13 @@ def create_project(*, name: str, description: str | None = None) -> dict:
     return response.json()
 
 
-def update_project(project_id: int, *, name: str) -> dict:
-    response = requests.patch(f"{API_BASE_URL}/projects/{project_id}", json={"name": name})
+def update_project(project_id: int, *, name: str | None = None, status: str | None = None) -> dict:
+    payload: dict = {}
+    if name is not None:
+        payload["name"] = name
+    if status is not None:
+        payload["status"] = status
+    response = requests.patch(f"{API_BASE_URL}/projects/{project_id}", json=payload)
     response.raise_for_status()
     return response.json()
 

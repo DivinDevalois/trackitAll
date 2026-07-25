@@ -43,14 +43,29 @@ else:
     statuses = ["todo", "in_progress", "done"]
     status_labels = {"todo": "À faire", "in_progress": "En cours", "done": "Terminé"}
 
+    project_statuses = ["active", "completed", "archived"]
+    project_status_labels = {"active": "Actif", "completed": "Terminé", "archived": "Archivé"}
+
     for project in projects:
         with st.container(border=True):
-            col1, col2, col3 = st.columns([4, 1, 1])
+            col1, col2, col3, col4 = st.columns([3, 2, 1, 1])
             with col1:
                 st.markdown(f"📁 **{project['name']}**")
                 if project["description"]:
                     st.caption(project["description"])
             with col2:
+                new_project_status = st.segmented_control(
+                    "Statut",
+                    options=project_statuses,
+                    format_func=lambda s: project_status_labels[s],
+                    default=project["status"],
+                    key=f"project_status_{project['id']}",
+                    label_visibility="collapsed",
+                )
+                if new_project_status and new_project_status != project["status"]:
+                    update_project(project["id"], status=new_project_status)
+                    st.rerun()
+            with col3:
                 with st.popover("✏️ Renommer", use_container_width=True):
                     new_name = st.text_input(
                         "Nom", value=project["name"], key=f"name_{project['id']}"
@@ -59,7 +74,7 @@ else:
                         if new_name.strip():
                             update_project(project["id"], name=new_name)
                             st.rerun()
-            with col3:
+            with col4:
                 if st.button(
                     "🗑️ Supprimer", key=f"delete_{project['id']}", use_container_width=True
                 ):
