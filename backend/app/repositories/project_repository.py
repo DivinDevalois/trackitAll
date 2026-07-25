@@ -1,15 +1,21 @@
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.models.project import Project
+from app.models.project import Project, ProjectStatus
 
 
 class ProjectRepository:
     def __init__(self, session: Session):
         self.session = session
 
-    def create(self, *, name: str, description: str | None = None) -> Project:
-        project = Project(name=name, description=description)
+    def create(
+        self,
+        *,
+        name: str,
+        description: str | None = None,
+        status: ProjectStatus = ProjectStatus.ACTIVE,
+    ) -> Project:
+        project = Project(name=name, description=description, status=status)
         self.session.add(project)
         self.session.commit()
         self.session.refresh(project)
@@ -27,6 +33,7 @@ class ProjectRepository:
         *,
         name: str | None = None,
         description: str | None = None,
+        status: ProjectStatus | None = None,
     ) -> Project | None:
         project = self.session.get(Project, project_id)
         if project is None:
@@ -35,6 +42,8 @@ class ProjectRepository:
             project.name = name
         if description is not None:
             project.description = description
+        if status is not None:
+            project.status = status
         self.session.commit()
         self.session.refresh(project)
         return project

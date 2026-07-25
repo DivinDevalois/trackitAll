@@ -1,5 +1,6 @@
 import pytest
 
+from app.models.project import ProjectStatus
 from app.repositories.project_repository import ProjectRepository
 from app.repositories.task_repository import TaskRepository
 
@@ -20,6 +21,13 @@ def test_create_persists_project(repo):
     assert project.id is not None
     assert project.name == "TrackItAll"
     assert project.description is None
+    assert project.status == ProjectStatus.ACTIVE
+
+
+def test_create_accepts_explicit_status(repo):
+    project = repo.create(name="TrackItAll", status=ProjectStatus.ARCHIVED)
+
+    assert project.status == ProjectStatus.ARCHIVED
 
 
 def test_get_returns_existing_project(repo):
@@ -56,6 +64,14 @@ def test_update_changes_fields(repo):
 
 def test_update_returns_none_for_unknown_id(repo):
     assert repo.update(999, name="Whatever") is None
+
+
+def test_update_changes_status(repo):
+    created = repo.create(name="Project")
+
+    updated = repo.update(created.id, status=ProjectStatus.COMPLETED)
+
+    assert updated.status == ProjectStatus.COMPLETED
 
 
 def test_delete_removes_project(repo):

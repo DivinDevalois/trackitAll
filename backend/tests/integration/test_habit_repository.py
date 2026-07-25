@@ -20,6 +20,7 @@ def test_create_sets_defaults(repo):
     assert habit.type == HabitType.BUILD
     assert habit.description is None
     assert habit.target_time is None
+    assert habit.is_active is True
 
 
 def test_create_accepts_break_type_description_and_target_time(repo):
@@ -93,3 +94,23 @@ def test_delete_removes_habit(repo):
 
 def test_delete_returns_false_for_unknown_id(repo):
     assert repo.delete(999) is False
+
+
+def test_update_toggles_is_active(repo):
+    created = repo.create(name="Gym")
+
+    paused = repo.update(created.id, is_active=False)
+    assert paused.is_active is False
+
+    resumed = repo.update(created.id, is_active=True)
+    assert resumed.is_active is True
+
+
+def test_list_active_only_excludes_paused_habits(repo):
+    active = repo.create(name="Active habit")
+    paused = repo.create(name="Paused habit")
+    repo.update(paused.id, is_active=False)
+
+    habits = repo.list(active_only=True)
+
+    assert [h.id for h in habits] == [active.id]

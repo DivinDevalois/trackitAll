@@ -37,6 +37,18 @@ def update_task_status(task_id: int, status: str) -> dict:
     return response.json()
 
 
+def update_task(task_id: int, *, title: str, description: str | None) -> dict:
+    payload: dict = {"title": title, "description": description or ""}
+    response = requests.patch(f"{API_BASE_URL}/tasks/{task_id}", json=payload)
+    response.raise_for_status()
+    return response.json()
+
+
+def delete_task(task_id: int) -> None:
+    response = requests.delete(f"{API_BASE_URL}/tasks/{task_id}")
+    response.raise_for_status()
+
+
 def list_habits() -> list[dict]:
     response = requests.get(f"{API_BASE_URL}/habits")
     response.raise_for_status()
@@ -70,6 +82,12 @@ def delete_habit(habit_id: int) -> None:
     response.raise_for_status()
 
 
+def set_habit_active(habit_id: int, is_active: bool) -> dict:
+    response = requests.patch(f"{API_BASE_URL}/habits/{habit_id}", json={"is_active": is_active})
+    response.raise_for_status()
+    return response.json()
+
+
 def check_in_habit(
     habit_id: int,
     check_in_date: str,
@@ -100,8 +118,13 @@ def create_project(*, name: str, description: str | None = None) -> dict:
     return response.json()
 
 
-def update_project(project_id: int, *, name: str) -> dict:
-    response = requests.patch(f"{API_BASE_URL}/projects/{project_id}", json={"name": name})
+def update_project(project_id: int, *, name: str | None = None, status: str | None = None) -> dict:
+    payload: dict = {}
+    if name is not None:
+        payload["name"] = name
+    if status is not None:
+        payload["status"] = status
+    response = requests.patch(f"{API_BASE_URL}/projects/{project_id}", json=payload)
     response.raise_for_status()
     return response.json()
 
@@ -168,5 +191,11 @@ def get_habit_task_correlation(window_days: int = 30) -> dict:
     response = requests.get(
         f"{API_BASE_URL}/analytics/correlation", params={"window_days": window_days}
     )
+    response.raise_for_status()
+    return response.json()
+
+
+def get_habit_streaks() -> list[dict]:
+    response = requests.get(f"{API_BASE_URL}/analytics/streaks")
     response.raise_for_status()
     return response.json()
