@@ -1,15 +1,31 @@
+import datetime as dt
+
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.models.habit import Habit
+from app.models.habit import Habit, HabitType
 
 
 class HabitRepository:
     def __init__(self, session: Session):
         self.session = session
 
-    def create(self, *, name: str, target_frequency_per_week: int = 7) -> Habit:
-        habit = Habit(name=name, target_frequency_per_week=target_frequency_per_week)
+    def create(
+        self,
+        *,
+        name: str,
+        description: str | None = None,
+        type: HabitType = HabitType.BUILD,
+        target_frequency_per_week: int = 7,
+        target_time: dt.time | None = None,
+    ) -> Habit:
+        habit = Habit(
+            name=name,
+            description=description,
+            type=type,
+            target_frequency_per_week=target_frequency_per_week,
+            target_time=target_time,
+        )
         self.session.add(habit)
         self.session.commit()
         self.session.refresh(habit)
@@ -26,15 +42,24 @@ class HabitRepository:
         habit_id: int,
         *,
         name: str | None = None,
+        description: str | None = None,
+        type: HabitType | None = None,
         target_frequency_per_week: int | None = None,
+        target_time: dt.time | None = None,
     ) -> Habit | None:
         habit = self.session.get(Habit, habit_id)
         if habit is None:
             return None
         if name is not None:
             habit.name = name
+        if description is not None:
+            habit.description = description
+        if type is not None:
+            habit.type = type
         if target_frequency_per_week is not None:
             habit.target_frequency_per_week = target_frequency_per_week
+        if target_time is not None:
+            habit.target_time = target_time
         self.session.commit()
         self.session.refresh(habit)
         return habit

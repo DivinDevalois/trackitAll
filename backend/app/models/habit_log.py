@@ -1,6 +1,6 @@
 import datetime as dt
 
-from sqlalchemy import Boolean, Date, ForeignKey, UniqueConstraint
+from sqlalchemy import Boolean, Date, ForeignKey, Integer, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base
@@ -14,3 +14,4 @@ class HabitLog(Base):
     habit_id: Mapped[int] = mapped_column(ForeignKey("habit.id"))
     date: Mapped[dt.date] = mapped_column(Date)
     completed: Mapped[bool] = mapped_column(Boolean, default=True)
+    duration_minutes: Mapped[int | None] = mapped_column(Integer)

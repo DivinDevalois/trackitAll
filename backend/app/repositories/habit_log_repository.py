@@ -11,15 +11,27 @@ class HabitLogRepository:
     def __init__(self, session: Session):
         self.session = session
 
-    def check_in(self, habit_id: int, log_date: date, *, completed: bool = True) -> HabitLog:
+    def check_in(
+        self,
+        habit_id: int,
+        log_date: date,
+        *,
+        completed: bool = True,
+        duration_minutes: int | None = None,
+    ) -> HabitLog:
         # Relies on the uq_habit_log_habit_id_date constraint: a second check-in
         # for the same day updates the existing row instead of erroring, atomically.
         stmt = (
             pg_insert(HabitLog)
-            .values(habit_id=habit_id, date=log_date, completed=completed)
+            .values(
+                habit_id=habit_id,
+                date=log_date,
+                completed=completed,
+                duration_minutes=duration_minutes,
+            )
             .on_conflict_do_update(
                 index_elements=[HabitLog.habit_id, HabitLog.date],
-                set_={"completed": completed},
+                set_={"completed": completed, "duration_minutes": duration_minutes},
             )
             .returning(HabitLog.id)
         )

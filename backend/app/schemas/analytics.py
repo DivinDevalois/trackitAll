@@ -40,3 +40,7 @@ class FinanceDailyMetric(BaseModel):
     category: str
     income: Decimal
     expense: Decimal
+
+
+class FinanceBalance(BaseModel):
+    balance: Decimal

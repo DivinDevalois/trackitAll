@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from app.db.session import get_session
 from app.repositories.habit_log_repository import HabitLogRepository
 from app.repositories.habit_repository import HabitRepository
-from app.schemas.habit import HabitCheckIn, HabitCreate, HabitLogRead, HabitRead
+from app.schemas.habit import HabitCheckIn, HabitCreate, HabitLogRead, HabitRead, HabitUpdate
 
 router = APIRouter(prefix="/habits", tags=["habits"])
 
@@ -37,6 +37,25 @@ def get_habit(habit_id: int, repo: HabitRepository = Depends(get_habit_repositor
     return habit
 
 
+@router.patch("/{habit_id}", response_model=HabitRead)
+def update_habit(
+    habit_id: int,
+    payload: HabitUpdate,
+    repo: HabitRepository = Depends(get_habit_repository),
+):
+    habit = repo.update(habit_id, **payload.model_dump(exclude_unset=True))
+    if habit is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Habit not found")
+    return habit
+
+
+@router.delete("/{habit_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_habit(habit_id: int, repo: HabitRepository = Depends(get_habit_repository)):
+    deleted = repo.delete(habit_id)
+    if not deleted:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Habit not found")
+
+
 @router.post("/{habit_id}/check-in", response_model=HabitLogRead)
 def check_in_habit(
     habit_id: int,
@@ -46,4 +65,9 @@ def check_in_habit(
 ):
     if habit_repo.get(habit_id) is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Habit not found")
-    return log_repo.check_in(habit_id, payload.date or date.today(), completed=payload.completed)
+    return log_repo.check_in(
+        habit_id,
+        payload.date or date.today(),
+        completed=payload.completed,
+        duration_minutes=payload.duration_minutes,
+    )
