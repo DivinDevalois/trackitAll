@@ -3,12 +3,33 @@ from datetime import date
 import streamlit as st
 
 from api_client import create_transaction, delete_transaction, get_finance_balance, list_transactions
+from chart_theme import GRIDLINE, MUTED_INK, NEGATIVE, POSITIVE, SURFACE
 
 st.set_page_config(page_title="Finances — TrackItAll", layout="wide")
 st.title("Finances")
 
 balance = float(get_finance_balance()["balance"])
-st.metric("Solde", f"{balance:.2f} €")
+balance_color = NEGATIVE if balance < 0 else POSITIVE
+sign = "" if balance < 0 else "+"
+st.markdown(
+    f"""
+    <div style="
+        padding: 1.5rem 1.75rem;
+        border-radius: 14px;
+        background-color: {SURFACE};
+        border: 1px solid {GRIDLINE};
+        margin-bottom: 1.5rem;
+    ">
+        <div style="color: {MUTED_INK}; font-size: 0.8rem; text-transform: uppercase;
+                    letter-spacing: 0.08em; margin-bottom: 0.35rem;">Solde</div>
+        <div style="color: {balance_color}; font-size: 2.5rem; font-weight: 650;
+                    font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;">
+            {sign}{balance:.2f} €
+        </div>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
 
 type_labels = {"income": "Revenu", "expense": "Dépense"}
 
@@ -49,7 +70,9 @@ type_icons = {"income": "🟢", "expense": "🔴"}
 if not transactions:
     st.info("Aucune transaction pour l'instant — ajoute-en une ci-dessus.")
 else:
-    for transaction in reversed(transactions):
+    for transaction in sorted(transactions, key=lambda t: t["date"], reverse=True):
+        amount_color = POSITIVE if transaction["type"] == "income" else NEGATIVE
+        amount_sign = "+" if transaction["type"] == "income" else "-"
         with st.container(border=True):
             col1, col2, col3 = st.columns([3, 2, 1])
             with col1:
@@ -60,8 +83,12 @@ else:
                     st.caption(transaction["description"])
                 st.caption(transaction["date"])
             with col2:
-                sign = "+" if transaction["type"] == "income" else "-"
-                st.markdown(f"**{sign}{transaction['amount']} €**")
+                st.markdown(
+                    f"<div style='color: {amount_color}; font-weight: 600; font-size: 1.1rem; "
+                    f"text-align: right; padding-top: 0.4rem;'>"
+                    f"{amount_sign}{transaction['amount']} €</div>",
+                    unsafe_allow_html=True,
+                )
             with col3:
                 if st.button(
                     "🗑️", key=f"delete_{transaction['id']}", use_container_width=True

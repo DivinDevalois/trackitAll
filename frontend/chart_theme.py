@@ -23,6 +23,12 @@ MUTED_INK = "#898781"
 
 FONT_FAMILY = "system-ui, -apple-system, 'Segoe UI', sans-serif"
 
+# Status colors (good/bad), kept distinct from arbitrary categorical use —
+# reuse the same validated dark-mode steps already in the palette rather
+# than inventing new hex values.
+POSITIVE = PALETTE["aqua"]
+NEGATIVE = PALETTE["red"]
+
 
 def series_color(index: int) -> str:
     return PALETTE[CATEGORICAL_ORDER[index % len(CATEGORICAL_ORDER)]]
