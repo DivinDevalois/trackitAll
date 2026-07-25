@@ -124,6 +124,16 @@ def test_update_habit_returns_404_for_unknown_id(client):
     assert response.status_code == 404
 
 
+def test_update_habit_toggles_is_active(client):
+    created = client.post("/habits", json={"name": "Gym"}).json()
+    assert created["is_active"] is True
+
+    response = client.patch(f"/habits/{created['id']}", json={"is_active": False})
+
+    assert response.status_code == 200
+    assert response.json()["is_active"] is False
+
+
 def test_delete_habit_returns_204(client):
     created = client.post("/habits", json={"name": "To delete"}).json()
 

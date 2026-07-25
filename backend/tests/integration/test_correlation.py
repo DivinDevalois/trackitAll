@@ -61,3 +61,28 @@ def test_excludes_habit_before_its_creation_date(db_session):
     by_day = {row["day"]: row for row in days}
     assert by_day[d1]["habit_completion_rate"] is None
     assert by_day[d0]["habit_completion_rate"] == 1.0
+
+
+def test_excludes_paused_habits(db_session):
+    today = date.today()
+    d1, d0 = (today - timedelta(days=n) for n in (1, 0))
+
+    active = Habit(name="Active", created_at=_utc(d1), is_active=True)
+    paused = Habit(name="Paused", created_at=_utc(d1), is_active=False)
+    db_session.add_all([active, paused])
+    db_session.flush()
+    # The paused habit was never checked in — if it still counted, both
+    # days would show a 0% rate instead of 100%.
+    db_session.add_all(
+        [
+            HabitLog(habit_id=active.id, date=d1, completed=True),
+            HabitLog(habit_id=active.id, date=d0, completed=True),
+        ]
+    )
+    db_session.commit()
+
+    days = get_habit_task_correlation(db_session, window_days=2)
+
+    by_day = {row["day"]: row for row in days}
+    assert by_day[d1]["habit_completion_rate"] == 1.0
+    assert by_day[d0]["habit_completion_rate"] == 1.0

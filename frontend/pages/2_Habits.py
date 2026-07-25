@@ -2,7 +2,14 @@ from datetime import date
 
 import streamlit as st
 
-from api_client import check_in_habit, create_habit, delete_habit, get_habit_metrics, list_habits
+from api_client import (
+    check_in_habit,
+    create_habit,
+    delete_habit,
+    get_habit_metrics,
+    list_habits,
+    set_habit_active,
+)
 
 st.set_page_config(page_title="Habitudes — TrackItAll", layout="wide")
 st.title("Habitudes")
@@ -48,17 +55,19 @@ st.subheader("Habitudes")
 
 habits = list_habits()
 today = date.today().isoformat()
+active_habits = [h for h in habits if h["is_active"]]
+paused_habits = [h for h in habits if not h["is_active"]]
 
 if not habits:
     st.info("Aucune habitude pour l'instant — crée-en une ci-dessus.")
 else:
-    for habit in habits:
+    for habit in active_habits:
         checked_in_today = any(
             log["day"] == today and log["completed"]
             for log in get_habit_metrics(habit_id=habit["id"])
         )
         with st.container(border=True):
-            col1, col2, col3 = st.columns([3, 2, 1])
+            col1, col2, col3, col4 = st.columns([3, 2, 1, 1])
             with col1:
                 st.markdown(f"{type_icons[habit['type']]} **{habit['name']}**")
                 st.caption(
@@ -90,6 +99,31 @@ else:
                         )
                         st.rerun()
             with col3:
+                if st.button(
+                    "⏸️ Pause", key=f"pause_{habit['id']}", use_container_width=True
+                ):
+                    set_habit_active(habit["id"], False)
+                    st.rerun()
+            with col4:
                 if st.button("🗑️", key=f"delete_{habit['id']}", use_container_width=True):
                     delete_habit(habit["id"])
                     st.rerun()
+
+    if paused_habits:
+        with st.expander(f"Habitudes en pause ({len(paused_habits)})"):
+            for habit in paused_habits:
+                col1, col2, col3 = st.columns([4, 1, 1])
+                with col1:
+                    st.markdown(f"{type_icons[habit['type']]} {habit['name']}")
+                with col2:
+                    if st.button(
+                        "▶️ Reprendre", key=f"resume_{habit['id']}", use_container_width=True
+                    ):
+                        set_habit_active(habit["id"], True)
+                        st.rerun()
+                with col3:
+                    if st.button(
+                        "🗑️", key=f"delete_paused_{habit['id']}", use_container_width=True
+                    ):
+                        delete_habit(habit["id"])
+                        st.rerun()

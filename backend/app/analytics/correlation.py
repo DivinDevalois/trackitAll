@@ -24,7 +24,10 @@ def get_habit_task_correlation(session: Session, *, window_days: int = 30) -> li
     completed_by_habit_day = {
         (row.habit_id, row.day): row.completed for row in get_daily_habit_metrics(session)
     }
-    habits = HabitRepository(session).list()
+    # Paused (is_active=False) habits are excluded entirely, including past
+    # days — we don't track a deactivation date, so there's no way to tell
+    # "was active back then" from "paused now"; this is the simple call.
+    habits = HabitRepository(session).list(active_only=True)
 
     results = []
     for day in days:
